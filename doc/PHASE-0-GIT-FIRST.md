@@ -61,8 +61,12 @@ flowchart LR
       `/gdoc-lesson` (or drop file in `raw/`) → `/ingest` → `/enrich-graph` → `/lint` →
       review → commit & push."
 - [ ] Define the **weekly-lesson cadence** (who adds it, by when).
-- [ ] On each update, publish a dated **bundle** (a ZIP of `wiki/`, or a few concatenated
-      markdown files by section) so non-technical users can re-import in one step.
+- [ ] On each update, publish a dated **bundle** — a few **concatenated** markdown files
+      by section (merge to ≤20 files to fit ChatGPT limits), so non-technical users can
+      re-import in one step.
+- [ ] *(For ChatGPT users)* build and maintain **one shared "Kabbalah Wiki GPT"** — a
+      Custom GPT loaded with the concatenated bundle + starter prompt, shared by link;
+      re-upload the bundle to it on each update (see §D.1).
 
 ### C. Reading the wiki (everyone, non-technical friendly)
 - [ ] Invite readers to the repo (Read access) — a private GitHub repo is already a
@@ -117,6 +121,34 @@ flowchart LR
       technical to **A**.
 - [ ] Document **plan/account requirements** per route (ChatGPT connector needs Plus+;
       Claude connector needs Pro/Team; manual bundle works on free).
+
+### D.1 — Which option for which user (cheat-sheet)
+
+| Persona | Best option | How it works | Refresh |
+|---|---|---|---|
+| **ChatGPT Plus** | **Shared Custom GPT** (maintainer builds once) | Maintainer uploads the bundle into one "Kabbalah Wiki GPT" + starter prompt, shares the link; everyone chats **privately** (no per-user upload, no shared-chat noise) | Maintainer re-uploads to the GPT once; all users get it |
+| ChatGPT Plus (alt) | Own Project / GitHub connector | Upload bundle to a personal Project, or connect the repo (Plus supports connectors, but code-oriented/rough for docs) | Re-upload / sync |
+| **Web-only Claude (Pro)** | **Project + GitHub connector** | In claude.ai (browser — no desktop): Project → "+" → connect repo → ask | Click **Sync** |
+| Web-only Claude (Free) | Project + bundle upload | Create Project, upload bundle, paste starter prompt | Re-upload bundle |
+| **You / technical (Claude Cowork or Code)** | **Add the local folder** (Route A) | Clone repo, point Cowork/Code at the folder, discuss full `raw/`+`wiki/`; best, no limits | `git pull` / `/pull` skill |
+
+> **Claude Desktop is NOT required** for web users — claude.ai in the browser does
+> Projects + the GitHub connector. Desktop / Cowork / Code is only for the *local folder*
+> route.
+
+**Recipe — one shared "Kabbalah Wiki GPT" for all ChatGPT users** (lowest friction):
+1. Maintainer (Plus) creates a **Custom GPT**.
+2. Upload the **concatenated bundle** as knowledge (merge into ≤20 files to fit limits).
+3. Paste the standard **starter prompt** as the GPT's instructions.
+4. Share the GPT link with the ChatGPT users — they each chat **privately**; no uploads.
+5. On updates: maintainer re-uploads the refreshed bundle to the GPT once.
+
+**Two caveats baked into the plan:**
+- The **bundle must be concatenated** into a handful of merged `.md`/`.txt` files (not
+  hundreds) — ChatGPT Custom GPTs cap at ~20 knowledge files + size limits.
+- The **connector route needs a GitHub account with repo access** per user; the
+  **bundle / Custom-GPT route needs no GitHub at all** — the universal lowest common
+  denominator.
 
 ### E. Tutorials (you offered video — yes)
 - [ ] **Video A — non-technical:** create a Claude Project, upload the bundle, paste the
