@@ -66,7 +66,10 @@ flowchart LR
       re-import in one step.
 - [ ] *(For ChatGPT users)* build and maintain **one shared "Kabbalah Wiki GPT"** — a
       Custom GPT loaded with the concatenated bundle + starter prompt, shared by link;
-      re-upload the bundle to it on each update (see §D.1).
+      re-upload the bundle to it on each update (see §D.1). The shared GPT is also the
+      **best free-ChatGPT path** (free users can *use* it, just not create it).
+- [ ] Also produce a **"lite bundle" (≤3 merged files)** for **free ChatGPT** users, who
+      can upload only **3 files/day** into a normal chat.
 
 ### C. Reading the wiki (everyone, non-technical friendly)
 - [ ] Invite readers to the repo (Read access) — a private GitHub repo is already a
@@ -128,6 +131,7 @@ flowchart LR
 |---|---|---|---|
 | **ChatGPT Plus** | **Shared Custom GPT** (maintainer builds once) | Maintainer uploads the bundle into one "Kabbalah Wiki GPT" + starter prompt, shares the link; everyone chats **privately** (no per-user upload, no shared-chat noise) | Maintainer re-uploads to the GPT once; all users get it |
 | ChatGPT Plus (alt) | Own Project / GitHub connector | Upload bundle to a personal Project, or connect the repo (Plus supports connectors, but code-oriented/rough for docs) | Re-upload / sync |
+| **ChatGPT Free** | Shared **"Kabbalah Wiki GPT"**, or a **lite bundle** | Open the maintainer's shared GPT link (works subject to free message limits; can't *create* GPTs, but can *use* them); or upload a **≤3-file "lite bundle"** into a normal chat (free = **3 files/day**) and ask in that session | Re-open the GPT / re-upload the lite bundle next session |
 | **Web-only Claude (Pro)** | **Project + GitHub connector** | In claude.ai (browser — no desktop): Project → "+" → connect repo → ask | Click **Sync** |
 | Web-only Claude (Free) | Project + bundle upload | Create Project, upload bundle, paste starter prompt | Re-upload bundle |
 | **You / technical (Claude Cowork or Code)** | **Add the local folder** (Route A) | Clone repo, point Cowork/Code at the folder, discuss full `raw/`+`wiki/`; best, no limits | `git pull` / `/pull` skill |
@@ -143,9 +147,12 @@ flowchart LR
 4. Share the GPT link with the ChatGPT users — they each chat **privately**; no uploads.
 5. On updates: maintainer re-uploads the refreshed bundle to the GPT once.
 
-**Two caveats baked into the plan:**
+**Caveats baked into the plan:**
 - The **bundle must be concatenated** into a handful of merged `.md`/`.txt` files (not
   hundreds) — ChatGPT Custom GPTs cap at ~20 knowledge files + size limits.
+- **Free ChatGPT** has **no connectors** and only **3 file uploads/day** — so it needs
+  either the shared Custom GPT (no upload) or a **"lite bundle" of ≤3 merged files**.
+  Uploads in a normal chat are per-session (re-upload next time).
 - The **connector route needs a GitHub account with repo access** per user; the
   **bundle / Custom-GPT route needs no GitHub at all** — the universal lowest common
   denominator.
