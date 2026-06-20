@@ -34,3 +34,35 @@ Append-only. Newest entries at the bottom.
 **Coverage so far:** ~18 raw sources processed → 13 concept/MOC pages (+ skeleton); 3 empty files skipped.
 
 **Still in queue (raw/50-Кабала/ root):** `"Союз соли"…`, `Авраам - как венец…`, `Авраам - это Хесед`, `Кабала Урок 25 окт 2023` (→ sources/), `Мордехай`, `Нимрод`, `Пурим…`, `праздники`. Then `Hebrew/`, `уроки с Леей/` (~110), `Тора/`.
+
+---
+
+## 2026-06-20 — Ingest batch 3: figures, lesson — `50-Кабала/` root complete
+
+**Processed:**
+- [[Авраам — Хесед]] ← `Авраам - как венец духовного развития через родословную.md` + `Авраам - это Хесед.md`
+- [[Союз соли — Остаток осознания]] ← `"Союз соли" - Урок выучен…md`
+- [[Кабала Урок 25 окт 2023]] — first `sources/` page ← `Кабала Урок 25 окт 2023.md`
+- Bidirectional link added: [[Хесед — Милосердие]] ↔ [[Авраам — Хесед]]
+
+**Skipped (empty):** `Нимрод.md`, `Мордехай.md`, `Пурим - …**.md`, `праздники.md`.
+
+**`raw/50-Кабала/` root: ✅ COMPLETE** — all 28 root `.md` files handled (21 → pages, 7 empty skipped).
+
+**Next:** `raw/50-Кабала/Hebrew/` (6 files), then `уроки с Леей/` (~110) + `Тора/`.
+
+---
+
+## 2026-06-20 — Ingest batch 4: `Hebrew/` folder complete
+
+**Processed:**
+- [[Подобие свойств — Любовь]] ← `אהבה = השתוות הצורה.md` + `קבלה לעם.md`
+- [[Корни и ветви — Причина и следствие]] ← `שורשים וענפים - סיבה ותוצאה.md`
+- [[Талмуд Десяти Сфирот — ТЭС]] ← `תלמוד 10 הספירות.md`
+- MOC enriched (правая=мужская, левая=женская) ← `עץ החיים - Дерево Жизни - 10 Сфирот.md` (already cited by MOC)
+
+**Skipped (empty):** `פירוש מילים (שורשים) בתלמוד 10 ספירות כרך א.md`.
+
+**`raw/50-Кабала/Hebrew/`: ✅ COMPLETE** — 6 files (5 → pages/MOC, 1 empty skipped).
+
+**Next (the big one):** `raw/50-Кабала/уроки с Леей/` (~110 files) + `Тора/`.
