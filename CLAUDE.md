@@ -82,12 +82,23 @@ Then: one-line summary → body → Related pages section with [[wikilinks]]
 
 **Exception:** Filenames cannot contain `/` on macOS — replace with nothing or rephrase the title.
 
+### CRITICAL: Dual links — Obsidian wikilink + standard markdown link
+
+Every cross-link in the body MUST appear in **both** forms, one immediately after the other:
+
+`[[Page Title]] · [Page Title](<Page Title.md>)`
+
+- The `[[wikilink]]` powers the **Obsidian** graph; the `[text](<path>)` renders on **GitHub** and satisfies **OKF**.
+- Wrap the path in angle brackets `<...>` so spaces and Cyrillic work.
+- Apply this to the `📂 Raw:` line and every **Related** item. Keep body prose free of bare `[[...]]` (put cross-links in the Related section) so GitHub never shows literal brackets.
+- Frontmatter `related:` stays as wikilinks (metadata only).
+
 ### CRITICAL: Link to raw source in body (not just frontmatter)
 
-The `sources:` field in frontmatter is metadata only — Obsidian does NOT build graph edges from it. Every wiki page MUST have an explicit `[[wikilink]]` to its raw source file in the page body:
+The `sources:` field in frontmatter is metadata only — Obsidian does NOT build graph edges from it. Every wiki page MUST link to its raw source file in the body, as a **dual link**:
 
 ✅ Required line after the one-line summary:
-📂 Raw: [[Имя файла в raw без расширения]]
+📂 Raw: [[Имя файла]] · [Имя файла](<относительный/путь/к/файлу.md>)
 
 The `sources:` frontmatter field may be kept for reference but is NOT sufficient for graph connectivity.
 
@@ -137,7 +148,7 @@ You MUST treat this as a living Zettelkasten vault optimized for Obsidian Graph 
 On EVERY ingest, update, or /enrich command:
 1. Extract 3–8 atomic concepts/ideas from the source (one idea per future note if needed).
 2. For every new or updated wiki page:
-   - Add a **"Related"** section at the bottom with 4–8 meaningful [[Wikilinks]] to existing pages.
+   - Add a **"Related"** section at the bottom with 4–8 meaningful **dual links** (`[[Page]] · [Page](<Page.md>)`) to existing pages.
    - Add 4–8 relevant #tags (e.g. #concept, #project, #theory, #tool, #source-year, #question).
    - Use frontmatter: `related: [[Page1]], [[Page2]]` (for Dataview if you use it).
 3. If a concept already exists in `concepts/`, **update that page** instead of creating a duplicate (merge knowledge and strengthen links).
