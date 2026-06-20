@@ -10,3 +10,7 @@
 # Google Drive pointer files (machine/account-specific; embed email + doc IDs,
 # don't render for other users — the .md conversions are the real content)
 *.gdoc
+
+# Converter tool — local environment (not committed)
+tools/gdoc-converter/venv/
+tools/gdoc-converter/credentials.json

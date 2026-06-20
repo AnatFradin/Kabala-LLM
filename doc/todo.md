@@ -1,9 +1,12 @@
 What is left for me
-- [ ] create chatgpt 
-- [ ] create  claude
-- [ ] create custom gpt
+- [X] create chatgpt 
+- [ ] test skill /gdoc-lesson
+- [ ] continue add files (claude code)
+- [ ] create  claude prompt
+- [X] create custom gpt
 - [ ] test if skill work (me / lena / yudit will need to run them)
-- [ ] push new context
 - [ ] validate chatgpt works well with promt
 - [ ] validate claude works well with promt
 - [ ] update clade.md to update both prompts at same time when required
+- [ ] allow search in internet but only when user requests it.
+- [ ] add to prompt: each time new lesson take place - new file should be added that contains reference to the document read during the lesson + link to video

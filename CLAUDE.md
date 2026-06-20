@@ -169,15 +169,16 @@ Steps:
 2. Ask: "Target subfolder inside raw/50-Кабала/ [уроки с Леей]:" (press Enter = default)
 3. Ask: "Custom filename (optional, without .md):" (press Enter = use doc title from Google)
 4. Run the converter script:
-   cd /Users/anatfradin/convert-google-doc-md && \
-   venv/bin/python gdoc-to-raw.py "<URL>" --subfolder "<subfolder>" [--title "<title>"]
+   cd "$(git rev-parse --show-toplevel)" && \
+   tools/gdoc-converter/venv/bin/python tools/gdoc-converter/gdoc-to-raw.py "<URL>" --subfolder "<subfolder>" [--title "<title>"]
 5. If the script exits with an error (e.g. auth required), show the error and stop.
 6. On success, automatically run /ingest to add the new file to the wiki.
 7. Report: which file was created + what was added to the wiki.
 
 Notes:
-- The script is at /Users/anatfradin/convert-google-doc-md/gdoc-to-raw.py (maintainer's machine only)
-- credentials.json is in the same folder; token is cached at ~/.gdoc2md_token.json
+- The script is at tools/gdoc-converter/gdoc-to-raw.py (submodule — always available in this repo)
+- credentials.json must be present at tools/gdoc-converter/credentials.json (copy once from your Google Cloud project)
+- OAuth token is cached at ~/.gdoc2md_token.json (per machine, created on first auth)
 - If auth fails (browser needed), tell the user to run the script manually once in Terminal to re-authenticate, then retry /gdoc-lesson
 
 /ingest

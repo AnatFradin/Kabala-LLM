@@ -1,0 +1,3 @@
+[submodule "tools/gdoc-converter"]
+	path = tools/gdoc-converter
+	url = https://github.com/AnatFradin/convert-google-doc-md
