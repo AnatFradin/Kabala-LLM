@@ -66,3 +66,19 @@ Append-only. Newest entries at the bottom.
 **`raw/50-Кабала/Hebrew/`: ✅ COMPLETE** — 6 files (5 → pages/MOC, 1 empty skipped).
 
 **Next (the big one):** `raw/50-Кабала/уроки с Леей/` (~110 files) + `Тора/`.
+
+---
+
+## 2026-06-20 — Ingest batch 5: core spiritual-work concepts (уроки с Леей)
+
+**Processed** (раздел `уроки с Леей/`):
+- [[Масах — Экран]] ← `МАСАХ  - ЭКРАН.md`
+- [[Клипот — Скорлупа]] ← `קליפות - кожура, шелуха.md` (incl. святая тень / тень клипы)
+- [[Поручительство — Аравут]] ← `Поручительство.md`
+- [[Включение свойства милосердия в свойство суда]] ← `Включение свойства милосердия в свойство суда.md` (РАБАШ 298)
+- [[Нет никого кроме Него]] ← `Нет никого кроме Него + комменты.md` (Шамати 1)
+
+**Note:** these are substantial articles — wiki pages are faithful summaries; full text stays in raw.
+**Deferred:** bidirectional reverse-links from the sefirot pages → a later `/enrich-graph` pass.
+
+**`уроки с Леей/` progress:** 5 of ~91 root files. Next sub-batch: **figures** (Авраам бен Терах, Давид, Йосеф, Яаков, Ицхак, Моше/Аарон, Мирьям, Мордехай) — skipping `(1)/(2)` duplicates.
