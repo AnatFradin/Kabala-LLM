@@ -82,3 +82,48 @@ Append-only. Newest entries at the bottom.
 **Deferred:** bidirectional reverse-links from the sefirot pages → a later `/enrich-graph` pass.
 
 **`уроки с Леей/` progress:** 5 of ~91 root files. Next sub-batch: **figures** (Авраам бен Терах, Давид, Йосеф, Яаков, Ицхак, Моше/Аарон, Мирьям, Мордехай) — skipping `(1)/(2)` duplicates.
+
+---
+
+## 2026-06-20 — Ingest batch 6: patriarch figures (sefirot mapping)
+
+**Processed** (`уроки с Леей/`):
+- [[Ицхак — Гвура]] ← `ПРАОТЕЦ ИЦХАК.md`
+- [[Яаков — Тиферет]] ← `Яаков как свойство.md`
+- [[Йосеф — Йесод]] ← `Йосеф бен Яаков (יוסף; 2199—2309 гг.md`
+- [[Давид — Малхут]] ← `Давид а-Мелех— как свойство.md` + `Давид - завершение.md`
+
+**Bidirectional links added:** Гвура↔Ицхак, Тиферет↔Яаков, Йесод↔Йосеф, Малхут↔Давид (patriarch↔sefira cluster now complete: Авраам/Ицхак/Яаков/Йосеф/Давид; Моше/Аарон pending).
+
+**Note:** these are large biographical+Kabbalistic source files — pages are faithful summaries; full text in raw.
+
+**`уроки с Леей/` progress:** 9 of ~91 root files. Next: remaining figures (Авраам бен Терах история, Моше/Аарон, Царь Шломо, Мирьям, Мордехай), then holidays, articles, Тора.
+
+---
+
+## 2026-06-20 — Ingest batch 7: remaining figures
+
+**Processed** (`уроки с Леей/`):
+- [[Моше и Аарон — Нецах и Ход]] ← `Моше Рабейну и Аарон.md` + `Моше и Аарон – взвимосвязь.md`
+- [[Шломо — Завершение (Гмар Тикун)]] ← `Царь Шломо.md`
+- [[Мирьям — Колодец]] ← `Мирьям (Мириам)…md`
+- [[Мордехай — Праведник Пурима]] ← `МОРДЕХАЙ СУДЬБА.md`
+
+**Bidirectional:** Нецах↔Моше, Ход↔Аарон.
+**Covered/skip:** the `Авраам бен Терах*.md`, `Аврам как внутреннее свойство.md`, `История Авраама Бен Тераха (часть 2).md` overlap [[Авраам — Хесед]] — treat as covered (enrich later if needed).
+
+**`уроки с Леей/` progress:** ~13 of ~91 root files. Next: **holidays** (Песах, Пурим, Ханука, Суккот/Симхат Тора, Шавуот, Рош Ашана/Йом Кипур, Ту би-Шват, Ту бе-Ав), then Бааль Сулам/РАБАШ articles, then `Тора/`.
+
+---
+
+## 2026-06-20 — Ingest batch 8: holidays (part 1)
+
+**Processed** (`уроки с Леей/`):
+- [[Песах — Исход]] ← `ПЕСАХ – ПРАКТИКУМ.md`
+- [[Пурим — Аман и Мордехай]] ← `О празднике Пурим.md` (ТЭС ч.15) + bidirectional link with [[Мордехай — Праведник Пурима]]
+- [[Шавуот — Дарование Торы]] ← `Каббалистический смысл праздника Шавуот.md`
+
+**Deferred:** `ХАНУКА – ПЕРВАЯ ОСТАНОВКА.md` is >256 KB (huge embedded content) — read paginated next batch.
+**Still in holidays queue:** Ханука, Суккот/Симхат Тора (+Ушпизин), Рош Ашана/Йом Кипур, Ту би-Шват, Ту бе-Ав, Свиток Рут, Сфират а-омер, и др. дубли Песаха/Пурима.
+
+**`уроки с Леей/` progress:** ~16 of ~91 root files.
