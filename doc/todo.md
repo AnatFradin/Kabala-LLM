@@ -10,3 +10,4 @@ What is left for me
 - [ ] update clade.md to update both prompts at same time when required
 - [ ] allow search in internet but only when user requests it.
 - [ ] add to prompt: each time new lesson take place - new file should be added that contains reference to the document read during the lesson + link to video
+- [ ] add link to the raw document (where possible)
