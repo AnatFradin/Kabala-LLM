@@ -13,8 +13,12 @@ on:
         default: "уроки с Леей"
         type: string
       title:
-        description: "Custom filename without .md (optional)"
-        required: false
+        description: "Lesson file title (without .md) for links file in raw/"
+        required: true
+        type: string
+      youtube_url:
+        description: "YouTube lesson URL"
+        required: true
         type: string
       create_pr:
         description: "Create PR with raw/wiki changes"
@@ -34,7 +38,8 @@ jobs:
     env:
       GDOC_URL: ${{ inputs.gdoc_url || github.event.client_payload.gdoc_url }}
       SUBFOLDER: ${{ inputs.subfolder || github.event.client_payload.subfolder || 'уроки с Леей' }}
-      TITLE: ${{ inputs.title || github.event.client_payload.title || '' }}
+      TITLE: ${{ inputs.title || github.event.client_payload.title }}
+      YOUTUBE_URL: ${{ inputs.youtube_url || github.event.client_payload.youtube_url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -46,6 +51,14 @@ jobs:
         run: |
           if [ -z "${GDOC_URL}" ]; then
             echo "gdoc_url is required (workflow_dispatch input or repository_dispatch client_payload.gdoc_url)."
+            exit 1
+          fi
+          if [ -z "${TITLE}" ]; then
+            echo "title is required (workflow_dispatch input or repository_dispatch client_payload.title)."
+            exit 1
+          fi
+          if [ -z "${YOUTUBE_URL}" ]; then
+            echo "youtube_url is required (workflow_dispatch input or repository_dispatch client_payload.youtube_url)."
             exit 1
           fi
 
@@ -115,16 +128,96 @@ jobs:
 
       - name: Convert Google Doc to raw markdown
         run: |
-          if [ -n "${TITLE}" ]; then
-            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}" --title "${TITLE}"
-          else
-            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
-          fi
+          python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
+
+      - name: Create lesson links file in raw
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from urllib.parse import urlparse
+          from datetime import datetime, timezone
+          import subprocess
+          import sys
+
+          repo = Path.cwd()
+          subfolder = os.environ["SUBFOLDER"]
+          title = os.environ["TITLE"].strip()
+          youtube_url = os.environ["YOUTUBE_URL"].strip()
+
+          disallowed = '\\/:*?"<>|'
+          safe_title = "".join(ch for ch in title if ch not in disallowed).strip()
+          if not safe_title:
+              print("title becomes empty after sanitization.", file=sys.stderr)
+              sys.exit(1)
+
+          parsed = urlparse(youtube_url)
+          if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+              print("youtube_url must be a valid http(s) URL.", file=sys.stderr)
+              sys.exit(1)
+          host = parsed.netloc.split(":", 1)[0].lower()
+          allowed_hosts = {"youtube.com", "youtu.be"}
+          if host not in allowed_hosts and not host.endswith(".youtube.com"):
+              print("youtube_url must be a youtube.com or youtu.be URL.", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              changed = subprocess.check_output(
+                  [
+                      "git",
+                      "ls-files",
+                      "--others",
+                      "--modified",
+                      "--exclude-standard",
+                      "--",
+                      f":(glob)raw/50-Кабала/{subfolder}/*.md",
+                  ],
+                  text=True,
+              ).splitlines()
+          except subprocess.CalledProcessError as err:
+              print(f"Failed to list changed raw files: {err}", file=sys.stderr)
+              sys.exit(1)
+          changed = [line.strip() for line in changed if line.strip()]
+          if not changed:
+              print("No converted raw markdown file detected after converter step.", file=sys.stderr)
+              sys.exit(1)
+          if len(changed) > 1:
+              print(
+                  "Expected exactly one converted markdown file, found multiple:\n"
+                  + "\n".join(changed),
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          converted_rel = Path(changed[0])
+          links_rel = Path("raw") / "50-Кабала" / subfolder / f"{safe_title}.md"
+          if links_rel == converted_rel:
+              print(
+                  "Title resolves to the same path as converted markdown file. "
+                  "Use a different title for the links file.",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          links_abs = repo / links_rel
+          links_abs.parent.mkdir(parents=True, exist_ok=True)
+
+          converted_posix = converted_rel.as_posix()
+          converted_stem = converted_rel.stem
+          generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+          content = (
+              f"# {title}\n\n"
+              f"- Converted Markdown: [[{converted_stem}]] · [{converted_stem}](<{converted_posix}>)\n"
+              f"- YouTube lesson: [{youtube_url}](<{youtube_url}>)\n\n"
+              f"_Generated by GDoc ingest pipeline on {generated_at}_\n"
+          )
+          links_abs.write_text(content, encoding="utf-8")
+          PY
 
       - name: Capture changed raw files
         id: changed
         run: |
-          FILES="$(git diff --name-only -- 'raw/**/*.md' | sed '/^$/d')"
+          FILES="$(git ls-files --others --modified --exclude-standard -- ':(glob)raw/**/*.md' | sed '/^$/d')"
           {
             echo "files<<EOF"
             if [ -n "${FILES}" ]; then
@@ -177,9 +270,11 @@ jobs:
             - gdoc_url: `${{ env.GDOC_URL }}`
             - subfolder: `${{ env.SUBFOLDER }}`
             - title: `${{ env.TITLE }}`
+            - youtube_url: `${{ env.YOUTUBE_URL }}`
 
             ## Scope
             - Converted Google Doc to `raw/`
+            - Created lesson links file in `raw/` using `title` + `youtube_url`
             - Ran ingest flow to update `wiki/`
           add-paths: |
             raw/**/*.md
