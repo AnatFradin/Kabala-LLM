@@ -35,7 +35,6 @@ jobs:
       GDOC_URL: ${{ inputs.gdoc_url || github.event.client_payload.gdoc_url }}
       SUBFOLDER: ${{ inputs.subfolder || github.event.client_payload.subfolder || 'уроки с Леей' }}
       TITLE: ${{ inputs.title || github.event.client_payload.title || '' }}
-      CREATE_PR: ${{ inputs.create_pr || github.event.client_payload.create_pr || true }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,6 +48,28 @@ jobs:
             echo "gdoc_url is required (workflow_dispatch input or repository_dispatch client_payload.gdoc_url)."
             exit 1
           fi
+
+      - name: Normalize inputs
+        id: normalize
+        env:
+          CREATE_PR_INPUT: ${{ inputs.create_pr }}
+          CREATE_PR_PAYLOAD: ${{ github.event.client_payload.create_pr }}
+        run: |
+          CREATE_PR_VALUE="${CREATE_PR_INPUT}"
+          if [ -z "${CREATE_PR_VALUE}" ] || [ "${CREATE_PR_VALUE}" = "null" ]; then
+            CREATE_PR_VALUE="${CREATE_PR_PAYLOAD}"
+          fi
+          if [ -z "${CREATE_PR_VALUE}" ] || [ "${CREATE_PR_VALUE}" = "null" ]; then
+            CREATE_PR_VALUE="true"
+          fi
+
+          case "$(printf "%s" "${CREATE_PR_VALUE}" | tr '[:upper:]' '[:lower:]')" in
+            true|1|yes) NORMALIZED_CREATE_PR="true" ;;
+            false|0|no) NORMALIZED_CREATE_PR="false" ;;
+            *) NORMALIZED_CREATE_PR="true" ;;
+          esac
+
+          echo "create_pr=${NORMALIZED_CREATE_PR}" >> "${GITHUB_OUTPUT}"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -89,7 +110,7 @@ jobs:
           fi
 
       - name: Run ingest agent (/ingest equivalent)
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
@@ -105,7 +126,7 @@ jobs:
           echo "name=automation/gdoc-ingest-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request with raw/wiki updates
-        if: ${{ env.CREATE_PR == true || env.CREATE_PR == 'true' }}
+        if: ${{ steps.normalize.outputs.create_pr == 'true' }}
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ${{ steps.branch.outputs.name }}
