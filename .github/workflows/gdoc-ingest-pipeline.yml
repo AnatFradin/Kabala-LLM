@@ -88,12 +88,16 @@ jobs:
             python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
           fi
 
+      - name: Validate CLAUDE instructions file
+        run: |
+          test -f CLAUDE.md || (echo "CLAUDE.md not found in repository root." && exit 1)
+
       - name: Run ingest agent (/ingest equivalent)
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@2fee15510437d71399d9139ed60433470484a8fb
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
-            Follow CLAUDE.md exactly.
+            Follow /CLAUDE.md (repository root) exactly.
             Run the ingest workflow for newly changed files in raw/.
             Update wiki pages and indexes as needed.
             Do not modify files in raw/.
@@ -102,10 +106,14 @@ jobs:
       - name: Generate branch name
         id: branch
         run: |
-          echo "name=automation/gdoc-ingest-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
+          SAFE_TITLE="$(printf '%s' "${TITLE}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/-\{2,\}/-/g' | sed 's/^-//; s/-$//' | cut -c1-24)"
+          if [ -z "${SAFE_TITLE}" ]; then
+            SAFE_TITLE="gdoc"
+          fi
+          echo "name=automation/gdoc-ingest-${SAFE_TITLE}-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request with raw/wiki updates
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.create_pr) || (github.event_name == 'repository_dispatch' && (github.event.client_payload.create_pr == true || github.event.client_payload.create_pr == 'true' || github.event.client_payload.create_pr == null)) }}
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.create_pr) || (github.event_name == 'repository_dispatch' && github.event.client_payload.create_pr != false && github.event.client_payload.create_pr != 'false') }}
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ${{ steps.branch.outputs.name }}
