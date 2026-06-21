@@ -46,6 +46,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
+          token: ${{ secrets.SUBMODULE_ACCESS_TOKEN }}
 
       - name: Validate required input
         run: |
