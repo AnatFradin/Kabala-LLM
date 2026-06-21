@@ -121,6 +121,20 @@ jobs:
             python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
           fi
 
+      - name: Capture changed raw files
+        id: changed
+        run: |
+          FILES="$(git diff --name-only -- 'raw/**/*.md' | sed '/^$/d')"
+          {
+            echo "files<<EOF"
+            if [ -n "${FILES}" ]; then
+              printf "%s\n" "${FILES}"
+            else
+              echo "(none)"
+            fi
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Validate CLAUDE instructions file
         run: |
           test -f CLAUDE.md || (echo "CLAUDE.md not found in repository root." && exit 1)
@@ -131,8 +145,8 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
             Follow CLAUDE.md (repository root) exactly.
-            Treat files changed by this workflow run as the ingest scope:
-            - process only files added/modified under raw/ by the converter step
+            Use only these raw files as ingest scope (from converter step):
+            ${{ steps.changed.outputs.files }}
             Update wiki pages and indexes as needed.
             Do not modify files in raw/.
             Keep changes limited to wiki/.
@@ -146,7 +160,7 @@ jobs:
       - name: Generate branch name
         id: branch
         run: |
-          echo "name=automation/gdoc-ingest-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
+          echo "name=automation/gdoc-ingest-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request with raw/wiki updates
         if: ${{ steps.normalize.outputs.create_pr == 'true' }}
