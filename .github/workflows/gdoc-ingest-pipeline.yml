@@ -97,7 +97,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
-            Follow /CLAUDE.md (repository root) exactly.
+            Follow CLAUDE.md (repository root) exactly.
             Run the ingest workflow for newly changed files in raw/.
             Update wiki pages and indexes as needed.
             Do not modify files in raw/.
@@ -106,13 +106,14 @@ jobs:
       - name: Generate branch name
         id: branch
         run: |
-          SAFE_TITLE="$(printf '%s' "${TITLE}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/-\{2,\}/-/g' | sed 's/^-//; s/-$//' | cut -c1-24)"
+          SAFE_TITLE="$(printf '%s' "${TITLE}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/-\{2,\}/-/g' | sed 's/^-//; s/-$//' | cut -c1-48)"
           if [ -z "${SAFE_TITLE}" ]; then
             SAFE_TITLE="gdoc"
           fi
           echo "name=automation/gdoc-ingest-${SAFE_TITLE}-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request with raw/wiki updates
+        # repository_dispatch payload may provide booleans or strings depending on sender implementation.
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.create_pr) || (github.event_name == 'repository_dispatch' && github.event.client_payload.create_pr != false && github.event.client_payload.create_pr != 'false') }}
         uses: peter-evans/create-pull-request@v6
         with:
