@@ -98,9 +98,11 @@ jobs:
           TOKEN_JSON: ${{ secrets.GDOC_CONVERTER_TOKEN_JSON }}
         run: |
           if [ -z "${CREDENTIALS_JSON}" ]; then
-            echo "Secret GDOC_CONVERTER_CREDENTIALS_JSON is required."
-            exit 1
+            echo "::warning::GDOC_CONVERTER_CREDENTIALS_JSON is not set. Skipping Google Doc conversion and ingest workflow."
+            echo "skip_pipeline=true" >> "${GITHUB_OUTPUT}"
+            exit 0
           fi
+          echo "skip_pipeline=false" >> "${GITHUB_OUTPUT}"
           CREDS_PATH="$(mktemp "${RUNNER_TEMP}/gdoc-credentials.XXXXXX.json")"
           printf "%s" "${CREDENTIALS_JSON}" > "${CREDS_PATH}"
           chmod 600 "${CREDS_PATH}"
@@ -116,6 +118,7 @@ jobs:
           fi
 
       - name: Install converter dependencies
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         run: |
           python -m pip install --upgrade pip
           if [ -f tools/gdoc-converter/requirements.txt ]; then
@@ -128,10 +131,12 @@ jobs:
           fi
 
       - name: Convert Google Doc to raw markdown
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         run: |
           python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
 
       - name: Create lesson links file in raw
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         run: |
           python - <<'PY'
           import os
@@ -216,6 +221,7 @@ jobs:
           PY
 
       - name: Capture changed raw files
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         id: changed
         run: |
           FILES="$(git ls-files --others --modified --exclude-standard -- ':(glob)raw/**/*.md' | sed '/^$/d')"
@@ -230,10 +236,12 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: Validate CLAUDE instructions file
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         run: |
           test -f CLAUDE.md || (echo "CLAUDE.md not found in repository root." && exit 1)
 
       - name: Run ingest agent (/ingest equivalent)
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         uses: anthropics/claude-code-action@v1.0.99
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -252,12 +260,13 @@ jobs:
           rm -f "${{ steps.creds.outputs.creds_path }}" "${{ steps.creds.outputs.token_path }}"
 
       - name: Generate branch name
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         id: branch
         run: |
           echo "name=automation/gdoc-ingest-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request with raw/wiki updates
-        if: ${{ steps.normalize.outputs.create_pr == 'true' }}
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' && steps.normalize.outputs.create_pr == 'true' }}
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ${{ steps.branch.outputs.name }}
