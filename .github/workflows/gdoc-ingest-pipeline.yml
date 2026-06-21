@@ -82,11 +82,11 @@ jobs:
 
       - name: Convert Google Doc to raw markdown
         run: |
-          ARGS=(tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}")
           if [ -n "${TITLE}" ]; then
-            ARGS+=(--title "${TITLE}")
+            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}" --title "${TITLE}"
+          else
+            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
           fi
-          python "${ARGS[@]}"
 
       - name: Run ingest agent (/ingest equivalent)
         uses: anthropics/claude-code-action@beta
@@ -105,7 +105,7 @@ jobs:
           echo "name=automation/gdoc-ingest-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request with raw/wiki updates
-        if: env.CREATE_PR == 'true'
+        if: ${{ env.CREATE_PR == true || env.CREATE_PR == 'true' }}
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ${{ steps.branch.outputs.name }}
