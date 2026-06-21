@@ -99,6 +99,37 @@ AI-ассистент найдёт новые/изменённые файлы и
 
 ---
 
+### Автоматический pipeline в GitHub Actions (Google Doc → raw → ingest → PR)
+
+Добавлен workflow: `.github/workflows/gdoc-ingest-pipeline.yml`.
+
+Он поддерживает:
+- `workflow_dispatch` (ручной запуск из GitHub UI);
+- `repository_dispatch` с типом `gdoc_ingest` (запуск из внешнего сервиса).
+
+Входные параметры:
+- `gdoc_url` (обязательно);
+- `subfolder` (по умолчанию: `уроки с Леей`);
+- `title` (обязательно) — имя дополнительного raw-файла урока (без `.md`);
+- `youtube_url` (обязательно) — ссылка на запись урока;
+- `create_pr` (по умолчанию: `true`).
+
+Минимальные Secrets:
+- `GDOC_CONVERTER_CREDENTIALS_JSON` — содержимое `credentials.json` для `tools/gdoc-converter`;
+- `ANTHROPIC_API_KEY` — ключ для шага ingest-агента;
+- `GDOC_CONVERTER_TOKEN_JSON` (опционально) — OAuth token cache `~/.gdoc2md_token.json`.
+
+Pipeline:
+1. Берёт ссылку на Google Doc;
+2. Запускает существующий `tools/gdoc-converter/gdoc-to-raw.py` (создаёт markdown-конспект в `raw/`);
+3. Создаёт дополнительный raw-файл c именем из `title`, который содержит:
+   - ссылку на сконвертированный markdown-файл;
+   - ссылку на YouTube (`youtube_url`);
+4. Запускает ingest-агент (`/ingest`-эквивалент) для обновления `wiki/`;
+5. Создаёт PR с изменениями в `raw/` и `wiki/`.
+
+---
+
 ### Обновить промпт Маора (Custom GPT)
 
 1. Откройте [doc/prompts-to-learn/CHATGPT-PROMPT-PLUS.md](doc/prompts-to-learn/CHATGPT-PROMPT-PLUS.md)

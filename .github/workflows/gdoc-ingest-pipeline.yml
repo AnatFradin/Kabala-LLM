@@ -1,0 +1,283 @@
+name: GDoc to Wiki Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      gdoc_url:
+        description: "Google Doc URL"
+        required: true
+        type: string
+      subfolder:
+        description: "Target subfolder inside raw/50-Кабала/"
+        required: false
+        default: "уроки с Леей"
+        type: string
+      title:
+        description: "Lesson file title (without .md) for links file in raw/"
+        required: true
+        type: string
+      youtube_url:
+        description: "YouTube lesson URL"
+        required: true
+        type: string
+      create_pr:
+        description: "Create PR with raw/wiki changes"
+        required: false
+        default: true
+        type: boolean
+  repository_dispatch:
+    types: [gdoc_ingest]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  gdoc-ingest:
+    runs-on: ubuntu-latest
+    env:
+      GDOC_URL: ${{ inputs.gdoc_url || github.event.client_payload.gdoc_url }}
+      SUBFOLDER: ${{ inputs.subfolder || github.event.client_payload.subfolder || 'уроки с Леей' }}
+      TITLE: ${{ inputs.title || github.event.client_payload.title }}
+      YOUTUBE_URL: ${{ inputs.youtube_url || github.event.client_payload.youtube_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Validate required input
+        run: |
+          if [ -z "${GDOC_URL}" ]; then
+            echo "gdoc_url is required (workflow_dispatch input or repository_dispatch client_payload.gdoc_url)."
+            exit 1
+          fi
+          if [ -z "${TITLE}" ]; then
+            echo "title is required (workflow_dispatch input or repository_dispatch client_payload.title)."
+            exit 1
+          fi
+          if [ -z "${YOUTUBE_URL}" ]; then
+            echo "youtube_url is required (workflow_dispatch input or repository_dispatch client_payload.youtube_url)."
+            exit 1
+          fi
+
+      - name: Normalize create_pr flag
+        id: normalize
+        env:
+          CREATE_PR_INPUT: ${{ inputs.create_pr }}
+          CREATE_PR_PAYLOAD: ${{ github.event.client_payload.create_pr }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          val = os.getenv("CREATE_PR_INPUT")
+          if val in (None, "", "null"):
+              val = os.getenv("CREATE_PR_PAYLOAD")
+          if val in (None, "", "null"):
+              normalized = "true"
+          elif str(val).strip().lower() in {"false", "0", "no"}:
+              normalized = "false"
+          else:
+              normalized = "true"
+
+          Path(os.environ["GITHUB_OUTPUT"]).write_text(f"create_pr={normalized}\n", encoding="utf-8")
+          PY
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prepare converter credentials
+        id: creds
+        env:
+          CREDENTIALS_JSON: ${{ secrets.GDOC_CONVERTER_CREDENTIALS_JSON }}
+          TOKEN_JSON: ${{ secrets.GDOC_CONVERTER_TOKEN_JSON }}
+        run: |
+          if [ -z "${CREDENTIALS_JSON}" ]; then
+            echo "Secret GDOC_CONVERTER_CREDENTIALS_JSON is required."
+            exit 1
+          fi
+          CREDS_PATH="$(mktemp "${RUNNER_TEMP}/gdoc-credentials.XXXXXX.json")"
+          printf "%s" "${CREDENTIALS_JSON}" > "${CREDS_PATH}"
+          chmod 600 "${CREDS_PATH}"
+          ln -sf "${CREDS_PATH}" tools/gdoc-converter/credentials.json
+          echo "creds_path=${CREDS_PATH}" >> "${GITHUB_OUTPUT}"
+
+          if [ -n "${TOKEN_JSON}" ]; then
+            TOKEN_PATH="$(mktemp "${RUNNER_TEMP}/gdoc-token.XXXXXX.json")"
+            printf "%s" "${TOKEN_JSON}" > "${TOKEN_PATH}"
+            chmod 600 "${TOKEN_PATH}"
+            ln -sf "${TOKEN_PATH}" "${HOME}/.gdoc2md_token.json"
+            echo "token_path=${TOKEN_PATH}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Install converter dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f tools/gdoc-converter/requirements.txt ]; then
+            pip install -r tools/gdoc-converter/requirements.txt
+          elif [ -f tools/gdoc-converter/pyproject.toml ] || [ -f tools/gdoc-converter/setup.py ]; then
+            pip install ./tools/gdoc-converter
+          else
+            echo "No converter dependency manifest found in tools/gdoc-converter."
+            exit 1
+          fi
+
+      - name: Convert Google Doc to raw markdown
+        run: |
+          python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
+
+      - name: Create lesson links file in raw
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from urllib.parse import urlparse
+          from datetime import datetime, timezone
+          import subprocess
+          import sys
+
+          repo = Path.cwd()
+          subfolder = os.environ["SUBFOLDER"]
+          title = os.environ["TITLE"].strip()
+          youtube_url = os.environ["YOUTUBE_URL"].strip()
+
+          disallowed = '\\/:*?"<>|'
+          safe_title = "".join(ch for ch in title if ch not in disallowed).strip()
+          if not safe_title:
+              print("title becomes empty after sanitization.", file=sys.stderr)
+              sys.exit(1)
+
+          parsed = urlparse(youtube_url)
+          if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+              print("youtube_url must be a valid http(s) URL.", file=sys.stderr)
+              sys.exit(1)
+          host = parsed.netloc.split(":", 1)[0].lower()
+          allowed_hosts = {"youtube.com", "youtu.be"}
+          if host not in allowed_hosts and not host.endswith(".youtube.com"):
+              print("youtube_url must be a youtube.com or youtu.be URL.", file=sys.stderr)
+              sys.exit(1)
+
+          try:
+              changed = subprocess.check_output(
+                  [
+                      "git",
+                      "ls-files",
+                      "--others",
+                      "--modified",
+                      "--exclude-standard",
+                      "--",
+                      f":(glob)raw/50-Кабала/{subfolder}/*.md",
+                  ],
+                  text=True,
+              ).splitlines()
+          except subprocess.CalledProcessError as err:
+              print(f"Failed to list changed raw files: {err}", file=sys.stderr)
+              sys.exit(1)
+          changed = [line.strip() for line in changed if line.strip()]
+          if not changed:
+              print("No converted raw markdown file detected after converter step.", file=sys.stderr)
+              sys.exit(1)
+          if len(changed) > 1:
+              print(
+                  "Expected exactly one converted markdown file, found multiple:\n"
+                  + "\n".join(changed),
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          converted_rel = Path(changed[0])
+          links_rel = Path("raw") / "50-Кабала" / subfolder / f"{safe_title}.md"
+          if links_rel == converted_rel:
+              print(
+                  "Title resolves to the same path as converted markdown file. "
+                  "Use a different title for the links file.",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          links_abs = repo / links_rel
+          links_abs.parent.mkdir(parents=True, exist_ok=True)
+
+          converted_posix = converted_rel.as_posix()
+          converted_stem = converted_rel.stem
+          generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+          content = (
+              f"# {title}\n\n"
+              f"- Converted Markdown: [[{converted_stem}]] · [{converted_stem}](<{converted_posix}>)\n"
+              f"- YouTube lesson: [{youtube_url}](<{youtube_url}>)\n\n"
+              f"_Generated by GDoc ingest pipeline on {generated_at}_\n"
+          )
+          links_abs.write_text(content, encoding="utf-8")
+          PY
+
+      - name: Capture changed raw files
+        id: changed
+        run: |
+          FILES="$(git ls-files --others --modified --exclude-standard -- ':(glob)raw/**/*.md' | sed '/^$/d')"
+          {
+            echo "files<<EOF"
+            if [ -n "${FILES}" ]; then
+              printf "%s\n" "${FILES}"
+            else
+              echo "(none)"
+            fi
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Validate CLAUDE instructions file
+        run: |
+          test -f CLAUDE.md || (echo "CLAUDE.md not found in repository root." && exit 1)
+
+      - name: Run ingest agent (/ingest equivalent)
+        uses: anthropics/claude-code-action@v1.0.99
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Follow CLAUDE.md (repository root) exactly.
+            Use only these raw files as ingest scope (from converter step):
+            ${{ steps.changed.outputs.files }}
+            Update wiki pages and indexes as needed.
+            Do not modify files in raw/.
+            Keep changes limited to wiki/.
+
+      - name: Cleanup temporary credentials
+        if: always()
+        run: |
+          rm -f tools/gdoc-converter/credentials.json "${HOME}/.gdoc2md_token.json"
+          rm -f "${{ steps.creds.outputs.creds_path }}" "${{ steps.creds.outputs.token_path }}"
+
+      - name: Generate branch name
+        id: branch
+        run: |
+          echo "name=automation/gdoc-ingest-$(date -u +%Y%m%d-%H%M%S)-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create pull request with raw/wiki updates
+        if: ${{ steps.normalize.outputs.create_pr == 'true' }}
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: ${{ steps.branch.outputs.name }}
+          commit-message: "Automated gdoc ingest pipeline update"
+          title: "Automated ingest: new Google Doc source"
+          body: |
+            ## Summary
+            This PR was generated by the **GDoc to Wiki Pipeline**.
+
+            ## Inputs
+            - gdoc_url: `${{ env.GDOC_URL }}`
+            - subfolder: `${{ env.SUBFOLDER }}`
+            - title: `${{ env.TITLE }}`
+            - youtube_url: `${{ env.YOUTUBE_URL }}`
+
+            ## Scope
+            - Converted Google Doc to `raw/`
+            - Created lesson links file in `raw/` using `title` + `youtube_url`
+            - Ran ingest flow to update `wiki/`
+          add-paths: |
+            raw/**/*.md
+            wiki/*.md
+            wiki/**/*.md
+          draft: false
