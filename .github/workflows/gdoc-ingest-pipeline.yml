@@ -25,6 +25,11 @@ on:
         required: false
         default: true
         type: boolean
+      auth_required:
+        description: "Google Doc is private — authenticate with Drive API (requires GDOC_CONVERTER_CREDENTIALS_JSON secret)"
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [gdoc_ingest]
 
@@ -96,13 +101,22 @@ jobs:
         env:
           CREDENTIALS_JSON: ${{ secrets.GDOC_CONVERTER_CREDENTIALS_JSON }}
           TOKEN_JSON: ${{ secrets.GDOC_CONVERTER_TOKEN_JSON }}
+          AUTH_REQUIRED: ${{ inputs.auth_required || github.event.client_payload.auth_required || 'false' }}
         run: |
-          if [ -z "${CREDENTIALS_JSON}" ]; then
-            echo "::warning::GDOC_CONVERTER_CREDENTIALS_JSON is not set. Skipping Google Doc conversion and ingest workflow."
-            echo "skip_pipeline=true" >> "${GITHUB_OUTPUT}"
+          echo "skip_pipeline=false" >> "${GITHUB_OUTPUT}"
+
+          if [ "${AUTH_REQUIRED}" != "true" ]; then
+            echo "📖 Public doc mode — no credentials needed."
+            echo "public_doc=true" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
-          echo "skip_pipeline=false" >> "${GITHUB_OUTPUT}"
+
+          echo "public_doc=false" >> "${GITHUB_OUTPUT}"
+          if [ -z "${CREDENTIALS_JSON}" ]; then
+            echo "::error::auth_required=true but GDOC_CONVERTER_CREDENTIALS_JSON secret is not set."
+            echo "::error::Add the secret in GitHub → Settings → Secrets → Actions."
+            exit 1
+          fi
           CREDS_PATH="$(mktemp "${RUNNER_TEMP}/gdoc-credentials.XXXXXX.json")"
           printf "%s" "${CREDENTIALS_JSON}" > "${CREDS_PATH}"
           chmod 600 "${CREDS_PATH}"
@@ -133,12 +147,15 @@ jobs:
       - name: Convert Google Doc to raw markdown
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         env:
-          # Write into the checked-out repo (not the author's local Obsidian vault),
-          # and skip the local Google Drive backup (no Drive mount in CI).
           KABALA_RAW_BASE: ${{ github.workspace }}/raw/50-Кабала
           KABALA_SKIP_GDRIVE_BACKUP: "1"
+          KABALA_PUBLIC_DOC: ${{ steps.creds.outputs.public_doc }}
         run: |
-          python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
+          if [ "${KABALA_PUBLIC_DOC}" = "true" ]; then
+            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}" --title "${TITLE}"
+          else
+            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
+          fi
 
       - name: Create lesson links file in raw
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
