@@ -132,6 +132,11 @@ jobs:
 
       - name: Convert Google Doc to raw markdown
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
+        env:
+          # Write into the checked-out repo (not the author's local Obsidian vault),
+          # and skip the local Google Drive backup (no Drive mount in CI).
+          KABALA_RAW_BASE: ${{ github.workspace }}/raw/50-Кабала
+          KABALA_SKIP_GDRIVE_BACKUP: "1"
         run: |
           python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
 
