@@ -252,6 +252,7 @@ jobs:
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         id: changed
         run: |
+          git config core.quotepath false
           FILES="$(git ls-files --others --modified --exclude-standard -- ':(glob)raw/**/*.md' | sed '/^$/d')"
           {
             echo "files<<EOF"
@@ -273,7 +274,7 @@ jobs:
         uses: anthropics/claude-code-action@v1.0.99
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          model: ${{ inputs.model || github.event.client_payload.model || 'claude-sonnet-4-6' }}
+          claude_args: "--model ${{ inputs.model || github.event.client_payload.model || 'claude-sonnet-4-6' }}"
           prompt: |
             Follow CLAUDE.md (repository root) exactly.
             Use only these raw files as ingest scope (from converter step):
