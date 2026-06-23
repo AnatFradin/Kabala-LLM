@@ -117,6 +117,17 @@ If you skip these steps, you are violating your operating manual. There are no e
 
 When answering ANY question — factual, conceptual, or conversational — ALWAYS support your answer with inline citations AND a Sources block at the end.
 
+### Depth requirement (mandatory, no exceptions)
+
+Never answer from a single wiki page. For every question:
+1. Read the primary concept or source page
+2. Open the raw file linked from the `📂 Raw:` line on that page
+3. Read at least 1–2 related pages from the **Related** section
+4. If the topic touches a lesson, check `wiki/sources/` for a lesson summary
+5. Synthesize across all sources — never stop at the first one found
+
+The user should never need to ask "can you look deeper?" — you always do this proactively.
+
 ### Inline citations (during the answer)
 Whenever you make a claim based on a source, add a citation immediately after it:
 
@@ -127,17 +138,17 @@ Or for wiki summaries:
 > 📖 `wiki/<path>.md`
 
 ### Sources block (end of every answer)
-Always end with:
+Always end with ALL sources consulted (minimum 3):
 
 ---
-📂 **Raw:** `raw/<path-to-file>.md`
-📖 **Wiki:** `wiki/<path-to-page>.md`
+📂 **Raw:** `raw/<path>.md`
+📖 **Wiki:** `wiki/<path>.md`
+📖 **Wiki (related):** `wiki/<path>.md`
 
 ### Rules
 - Use repo-relative paths (starting from `raw/` or `wiki/`) — Obsidian opens these directly when the repo is the vault root
-- List ALL relevant sources, not just one
+- List ALL sources consulted, not just the primary one
 - Include citations even in casual conversational answers about Kabbalah concepts
-- If multiple raw files support the answer, list all of them
 - If no wiki page exists yet, write `Wiki: нет — только raw источник`
 - **Never make a claim about Kabbalah content without a reference to back it up**
 
