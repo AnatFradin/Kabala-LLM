@@ -157,11 +157,7 @@ jobs:
           KABALA_SKIP_GDRIVE_BACKUP: "1"
           KABALA_PUBLIC_DOC: ${{ steps.creds.outputs.public_doc }}
         run: |
-          if [ "${KABALA_PUBLIC_DOC}" = "true" ]; then
-            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}" --title "${TITLE}"
-          else
-            python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
-          fi
+          python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}" --title "${TITLE}"
 
       - name: Create lesson links file in raw
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
@@ -195,6 +191,9 @@ jobs:
               print("youtube_url must be a youtube.com or youtu.be URL.", file=sys.stderr)
               sys.exit(1)
 
+          # Ensure git outputs UTF-8 paths, not octal-escaped ones.
+          subprocess.run(["git", "config", "core.quotepath", "false"], check=True)
+
           try:
               changed = subprocess.check_output(
                   [
@@ -224,14 +223,8 @@ jobs:
               sys.exit(1)
 
           converted_rel = Path(changed[0])
-          links_rel = Path("raw") / "50-Кабала" / subfolder / f"{safe_title}.md"
-          if links_rel == converted_rel:
-              print(
-                  "Title resolves to the same path as converted markdown file. "
-                  "Use a different title for the links file.",
-                  file=sys.stderr,
-              )
-              sys.exit(1)
+          # Suffix distinguishes the links file from the converted content file.
+          links_rel = Path("raw") / "50-Кабала" / subfolder / f"{safe_title} — ссылки.md"
 
           links_abs = repo / links_rel
           links_abs.parent.mkdir(parents=True, exist_ok=True)
