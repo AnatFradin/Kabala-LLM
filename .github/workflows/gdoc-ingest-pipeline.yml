@@ -30,6 +30,11 @@ on:
         required: false
         default: false
         type: boolean
+      model:
+        description: "Claude model to use for wiki ingest (e.g. claude-sonnet-4-5, claude-haiku-4-5-20251001, claude-opus-4-8)"
+        required: false
+        default: "claude-sonnet-4-5"
+        type: string
   repository_dispatch:
     types: [gdoc_ingest]
 
@@ -268,6 +273,7 @@ jobs:
         uses: anthropics/claude-code-action@v1.0.99
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: ${{ inputs.model || github.event.client_payload.model || 'claude-sonnet-4-5' }}
           prompt: |
             Follow CLAUDE.md (repository root) exactly.
             Use only these raw files as ingest scope (from converter step):
