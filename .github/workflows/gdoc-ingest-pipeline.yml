@@ -268,13 +268,29 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: "--model ${{ inputs.model || github.event.client_payload.model || 'claude-sonnet-4-6' }}"
+          show_full_output: "true"
           prompt: |
-            Follow CLAUDE.md (repository root) exactly.
-            Use only these raw files as ingest scope (from converter step):
+            You are a wiki maintainer for a Kabbalah knowledge base.
+            The repository root is also the Obsidian vault root.
+
+            A new raw source file has just been added by an automated converter.
+            Your task is to ingest it into the wiki following the rules in CLAUDE.md.
+
+            STEP 1 — Read CLAUDE.md to understand all rules and page formats.
+            STEP 2 — Read the following new raw file(s):
             ${{ steps.changed.outputs.files }}
-            Update wiki pages and indexes as needed.
-            Do not modify files in raw/.
-            Keep changes limited to wiki/.
+            STEP 3 — Create a summary page in wiki/sources/ for the raw file.
+            STEP 4 — Create or update concept pages in wiki/concepts/ for key ideas in the source.
+            STEP 5 — Update wiki/index.md, wiki/overview.md, wiki/glossary.md as needed.
+            STEP 6 — Append an entry to wiki/log.md describing what was ingested today.
+
+            RULES:
+            - NEVER modify any file inside raw/ — it is read-only.
+            - All new files go under wiki/ only.
+            - Every wiki page must start with YAML frontmatter (see CLAUDE.md for format).
+            - Every cross-link must appear in dual form: [[Page]] · [Page](<Page.md>)
+            - Include a Raw: link in each source page body pointing to the raw file.
+            - Today's date is 2026-06-23.
 
       - name: Cleanup temporary credentials
         if: always()
