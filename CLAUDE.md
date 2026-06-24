@@ -27,6 +27,7 @@ wiki/
   log.md                ← append-only activity log
   overview.md           ← high-level synthesis of the whole base
   glossary.md           ← living terminology
+  AGENT.md              ← reading protocol for the ChatGPT study assistant (NOT a content page — do not delete as orphan)
   sources/              ← one page per raw source
   concepts/             ← core ideas
   analyses/             ← synthesized outputs, comparisons, etc.
