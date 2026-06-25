@@ -13,7 +13,7 @@ on:
         default: "уроки с Леей"
         type: string
       title:
-        description: "Lesson file title (without .md) for links file in raw/"
+        description: "Title for the LINKS file only (raw/.../<title> — ссылки.md). The converted lesson .md keeps the Google Doc's own name."
         required: true
         type: string
       youtube_url:
@@ -157,7 +157,9 @@ jobs:
           KABALA_SKIP_GDRIVE_BACKUP: "1"
           KABALA_PUBLIC_DOC: ${{ steps.creds.outputs.public_doc }}
         run: |
-          python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}" --title "${TITLE}"
+          # No --title: the converted .md keeps the Google Doc's own name.
+          # TITLE is used only for the separate links file (created in the next step).
+          python tools/gdoc-converter/gdoc-to-raw.py "${GDOC_URL}" --subfolder "${SUBFOLDER}"
 
       - name: Create lesson links file in raw
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
