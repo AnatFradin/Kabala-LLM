@@ -233,7 +233,7 @@ jobs:
 
           # Link relative to the links file's own directory, not the repo root,
           # since both files live in the same raw/50-Кабала/{subfolder}/ folder.
-          converted_relative_to_links = os.path.relpath(converted_rel, links_rel.parent)
+          converted_relative_to_links = os.path.relpath(str(converted_rel), str(links_rel.parent))
           converted_relative_posix = Path(converted_relative_to_links).as_posix()
           converted_stem = converted_rel.stem
           generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
