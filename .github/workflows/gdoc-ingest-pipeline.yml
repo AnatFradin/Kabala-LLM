@@ -31,10 +31,15 @@ on:
         default: false
         type: boolean
       model:
-        description: "Claude model to use for wiki ingest (e.g. claude-sonnet-4-6, claude-haiku-4-5-20251001, claude-opus-4-8)"
+        description: "Claude model to use for wiki ingest"
         required: false
         default: "claude-sonnet-4-6"
-        type: string
+        type: choice
+        options:
+          - claude-sonnet-4-6
+          - claude-opus-4-5
+          - claude-sonnet-4-5
+          - claude-haiku-4-5
   repository_dispatch:
     types: [gdoc_ingest]
 
@@ -267,6 +272,25 @@ jobs:
         run: |
           test -f CLAUDE.md || (echo "CLAUDE.md not found in repository root." && exit 1)
 
+      - name: Resolve and validate model
+        if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
+        id: model
+        env:
+          RAW_MODEL: ${{ inputs.model || github.event.client_payload.model || '' }}
+        run: |
+          DEFAULT_MODEL="claude-sonnet-4-6"
+          ALLOWED_MODELS="claude-sonnet-4-6 claude-opus-4-5 claude-sonnet-4-5 claude-haiku-4-5"
+          MODEL="${RAW_MODEL}"
+          if [ -z "${MODEL}" ]; then
+            MODEL="${DEFAULT_MODEL}"
+          fi
+          # Only accept models from the known-valid allowlist.
+          if ! echo " ${ALLOWED_MODELS} " | grep -qF " ${MODEL} "; then
+            echo "::warning::Model '${MODEL}' is not in the allowed list (${ALLOWED_MODELS}); falling back to '${DEFAULT_MODEL}'."
+            MODEL="${DEFAULT_MODEL}"
+          fi
+          echo "name=${MODEL}" >> "${GITHUB_OUTPUT}"
+
       - name: Install Claude Code CLI
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         run: npm install -g @anthropic-ai/claude-code
@@ -275,7 +299,7 @@ jobs:
         if: ${{ steps.creds.outputs.skip_pipeline != 'true' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          MODEL: ${{ inputs.model || github.event.client_payload.model || 'claude-sonnet-4-6' }}
+          MODEL: ${{ steps.model.outputs.name }}
           CHANGED_FILES: ${{ steps.changed.outputs.files }}
         run: |
           claude --dangerously-skip-permissions --model "${MODEL}" -p "
