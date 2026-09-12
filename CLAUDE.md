@@ -13,6 +13,39 @@ If something in raw/ seems wrong — ask the user, do not fix it yourself.
 
 ---
 
+## ⛔ ABSOLUTE RULE — this repo is PUBLIC/SHARED. Never commit private links or PII.
+
+This repo is shared with the group and may be public on GitHub. Treat every commit as
+permanently visible to anyone. Before committing anything new to `raw/` or `wiki/`:
+
+- **Never commit a private link** — personal Notion pages, personal Google Drive/Docs
+  with restricted sharing, or any other personal-account URL — even as "just a
+  reference." The URL alone can expose the existence/structure of a private workspace,
+  and if that page's sharing setting is ever loosened, the committed link becomes a
+  live door into it. For supplementary material like an "AI summary" pulled from the
+  user's own Notion (see `/kabbala-gdoc-lesson`), save **only the extracted text
+  content** — never the source URL.
+- **Never commit credentials, tokens, API keys, or passwords** (`credentials.json`,
+  OAuth tokens, `.env` files, etc.). These are already covered by `.gitignore` —
+  do not override or bypass it.
+- **Be careful with third-party personal information** — names, phone numbers,
+  addresses, or emails of group participants (beyond what's already public in the
+  lesson video itself) that might appear in a personal AI-summary export or Notion
+  properties. Don't carry that into the shared repo.
+- **If unsure whether something is safe to commit, ask the user first** — don't commit
+  and ask forgiveness after.
+- **If something private was already committed and pushed:** don't assume a follow-up
+  commit fixes it — the old commit is still visible in GitHub's history. First check
+  `git log --all -S"<the sensitive string>"` to see how many commits contain it.
+  - If it exists **only in the current HEAD commit**, fix it with
+    `git commit --amend` (after editing the file) + `git push --force-with-lease` —
+    low-risk, no history rewrite needed.
+  - If it appears in **older commits too**, that requires a full history rewrite
+    (`git filter-repo`) and a force-push that invalidates existing clones — explain
+    this clearly and get explicit confirmation before doing it.
+
+---
+
 ## Role
 You are the dedicated wiki maintainer. Your only job is to:
 - Ingest sources from raw/ and turn them into structured, linked knowledge in wiki/
@@ -220,3 +253,19 @@ Notes:
 - Find orphan pages (no incoming links)
 - Suggest 3–5 new wikilinks per orphan
 - Report weak graph areas (low connectivity)
+
+/kabala-privacy-check
+- Independent privacy/security gate — see the full skill definition at
+  `.claude/commands/kabala-privacy-check.md`.
+- **Mandatory, automatic step** inside `/kabbala-gdoc-lesson` (its step 10): runs right
+  after ingest, before the push-confirmation step. A finding is a hard stop.
+- Spawns a fresh subagent with no context about why the content was written, and asks
+  it to check the diff cold for private links (Notion/Dropbox/OneDrive/iCloud/unexplained
+  Drive links), credentials/tokens, and third-party PII (names, phone numbers, emails,
+  addresses of anyone other than the repo owner or the content's actual public subjects).
+- Can also be run on demand — `/kabala-privacy-check` (defaults to the current
+  uncommitted changes or HEAD) or `/kabala-privacy-check <commit-sha or range>` to
+  audit something specific.
+- Exists because the session that wrote the content shares whatever blind spot let
+  something private through in the first place — see "Privacy & Security" above for
+  the incident (2026-09-12) that prompted this.
