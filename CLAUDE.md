@@ -25,6 +25,11 @@ permanently visible to anyone. Before committing anything new to `raw/` or `wiki
   live door into it. For supplementary material like an "AI summary" pulled from the
   user's own Notion (see `/kabbala-gdoc-lesson`), save **only the extracted text
   content** — never the source URL.
+- **Never commit lesson video links (YouTube or any other host).** Lesson recordings
+  are unlisted and shared only inside the group, so the link itself is the access key —
+  committing it to this public repo publishes the video (with participants' faces,
+  voices and personal shares). Write only «урок на YouTube от <дата> (ссылка не
+  публикуется)»; the real links are kept outside the repo. Rule set 2026-10-06.
 - **Never commit credentials, tokens, API keys, or passwords** (`credentials.json`,
   OAuth tokens, `.env` files, etc.). These are already covered by `.gitignore` —
   do not override or bypass it.
